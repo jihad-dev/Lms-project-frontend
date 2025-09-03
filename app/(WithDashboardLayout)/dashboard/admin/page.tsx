@@ -1,9 +1,13 @@
 "use client";
 
 import React from "react";
-import { Search, Users, BookOpen, CheckCircle2, Ban, Filter, Loader2 } from "lucide-react";
+import { Search, BookOpen, CheckCircle2, FileText, Video, Filter, Plus, Edit, FileText as ModuleIcon, Clock, User, DollarSign, BarChart3 } from "lucide-react";
 import { useGetAllUserQuery } from "@/src/Redux/features/auth/authApi";
 import { useGetAllCoursesQuery } from "@/src/Redux/features/course/courseApi";
+import { useGetAllModulesQuery } from "@/src/Redux/features/course/moduleApi";
+import { IModule } from "@/src/types/module";
+import Link from "next/link";
+import Image from "next/image";
 
 type User = {
     id?: string;
@@ -20,178 +24,258 @@ type Course = {
     title: string;
     status?: string;
     price?: number;
+    instructor?: string;
+    duration?: string;
+    level?: string;
+    category?: string;
+    description?: string;
+    thumbnail?: string;
 };
 
 const AdminPage = () => {
     const { data: usersData, isLoading: loadingUsers, isFetching: fetchingUsers } = useGetAllUserQuery();
     const { data: coursesData, isLoading: loadingCourses, isFetching: fetchingCourses } = useGetAllCoursesQuery();
+    const { data: modulesData, isLoading: loadingModules, isFetching: fetchingModules } = useGetAllModulesQuery();
 
     const users: User[] = Array.isArray(usersData) ? usersData : [];
     const courses: Course[] = Array.isArray(coursesData) ? coursesData : [];
+    const modules: IModule[] = Array.isArray(modulesData) ? modulesData : [];
 
     const [query, setQuery] = React.useState("");
-    const [role, setRole] = React.useState<string>("all");
+    const [category, setCategory] = React.useState<string>("all");
+    const [level, setLevel] = React.useState<string>("all");
     const [status, setStatus] = React.useState<string>("all");
 
     const isLoading = loadingUsers || loadingCourses || fetchingUsers || fetchingCourses;
 
-    const kpis = React.useMemo(() => {
-        const totalUsers = users.length;
+    const stats = React.useMemo(() => {
         const totalCourses = courses.length;
-        const activeUsers = users.filter((u) => (u.status ?? "") !== "blocked" && !u.isDeleted).length;
-        const blockedUsers = users.filter((u) => (u.status ?? "") === "blocked").length;
-        return { totalUsers, totalCourses, activeUsers, blockedUsers };
-    }, [users, courses]);
+        const publishedCourses = courses.filter(c => c.status === "published").length;
+        const totalModules = modules.length; // Mock data as shown in image
+        const totalLectures = 0; // Mock data as shown in image
+        return { totalCourses, publishedCourses, totalModules, totalLectures };
+    }, [courses, modules]);
 
-    const filteredUsers = React.useMemo(() => {
+    const filteredCourses = React.useMemo(() => {
         const q = query.trim().toLowerCase();
-        return users.filter((u) => {
-            const matchesQuery = !q || [u.name, u.email, u.role].some((v) => (v ?? "").toLowerCase().includes(q));
-            const matchesRole = role === "all" || (u.role ?? "").toLowerCase() === role;
-            const matchesStatus = status === "all" || (u.status ?? "").toLowerCase() === status;
-            return matchesQuery && matchesRole && matchesStatus;
+        return courses.filter((c) => {
+            const matchesQuery = !q || c.title.toLowerCase().includes(q);
+            const matchesCategory = category === "all" || c.category === category;
+            const matchesLevel = level === "all" || c.level === level;
+            const matchesStatus = status === "all" || c.status === status;
+            return matchesQuery && matchesCategory && matchesLevel && matchesStatus;
         });
-    }, [users, query, role, status]);
+    }, [courses, query, category, level, status]);
+
+    const clearFilters = () => {
+        setQuery("");
+        setCategory("all");
+        setLevel("all");
+        setStatus("all");
+    };
 
     return (
-        <div className="space-y-5">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-h-screen bg-slate-900 text-white p-6 space-y-6">
+            {/* Header */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Admin Dashboard</h1>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Monitor your LMS and manage users and courses.</p>
+                    <h1 className="text-2xl font-semibold">Manage all courses, modules, and lectures</h1>
                 </div>
+                <Link href="/dashboard/admin/courses">    <button className="inline-flex items-center gap-2 rounded-lg bg-slate-800 px-4 py-2 text-white hover:bg-slate-700 transition-colors">
+                    <Plus size={18} />
+                    Create Course
+                </button></Link>
             </div>
 
-            {/* KPIs */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Total Users</span>
-                        <Users size={16} className="text-blue-600" />
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold">{kpis.totalUsers}</div>
-                </div>
-                <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Total Courses</span>
-                        <BookOpen size={16} className="text-emerald-600" />
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold">{kpis.totalCourses}</div>
-                </div>
-                <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Active Users</span>
-                        <CheckCircle2 size={16} className="text-emerald-600" />
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold">{kpis.activeUsers}</div>
-                </div>
-                <div className="rounded-lg border bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-                    <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Blocked Users</span>
-                        <Ban size={16} className="text-rose-600" />
-                    </div>
-                    <div className="mt-2 text-2xl font-semibold">{kpis.blockedUsers}</div>
-                </div>
-            </div>
-
-            {/* Toolbar */}
-            <div className="flex flex-col gap-3 rounded-lg border bg-white p-3 dark:border-slate-700 dark:bg-slate-900 md:flex-row md:items-center md:justify-between">
-                <div className="relative w-full md:max-w-sm">
-                    <Search className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            {/* Search & Filters Section */}
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative flex-1 max-w-md">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                     <input
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search users by name, email, role..."
-                        className="w-full rounded-md border border-slate-200 bg-white/70 py-2 pl-8 pr-3 text-sm outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900/50 dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                        placeholder="Search courses..."
+                        className="w-full rounded-lg border border-slate-600 bg-slate-800 py-3 pl-10 pr-4 text-white placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                     />
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <div className="flex items-center gap-2">
-                        <Filter size={16} className="text-slate-500" />
-                        <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="rounded-md border px-3 py-2 text-sm outline-none dark:border-slate-700 dark:bg-slate-900"
-                        >
-                            <option value="all">All roles</option>
-                            <option value="admin">admin</option>
-                            <option value="instructor">instructor</option>
-                            <option value="student">student</option>
-                        </select>
-                    </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    >
+                        <option value="all">All Categories</option>
+                        <option value="frontend">Frontend</option>
+                        <option value="backend">Backend</option>
+                        <option value="fullstack">Fullstack</option>
+                    </select>
+
+                    <select
+                        value={level}
+                        onChange={(e) => setLevel(e.target.value)}
+                        className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
+                    >
+                        <option value="all">All Levels</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+
                     <select
                         value={status}
                         onChange={(e) => setStatus(e.target.value)}
-                        className="rounded-md border px-3 py-2 text-sm outline-none dark:border-slate-700 dark:bg-slate-900"
+                        className="rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                     >
-                        <option value="all">All status</option>
-                        <option value="in-progress">in-progress</option>
-                        <option value="blocked">blocked</option>
+                        <option value="all">All Status</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                        <option value="archived">Archived</option>
                     </select>
+
+                    <button
+                        onClick={clearFilters}
+                        className="inline-flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-3 text-white hover:bg-slate-700 transition-colors"
+                    >
+                        <Filter size={16} />
+                        Clear Filters
+                    </button>
                 </div>
             </div>
 
-            {/* Users Table */}
-            <div className="overflow-x-auto rounded-lg border dark:border-slate-700">
-                <table className="min-w-full text-sm">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50">
-                        <tr className="text-left">
-                            <th className="px-4 py-2">Name</th>
-                            <th className="px-4 py-2">Email</th>
-                            <th className="px-4 py-2">Role</th>
-                            <th className="px-4 py-2">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {isLoading ? (
-                            <tr>
-                                <td className="px-4 py-6" colSpan={4}>
-                                    <span className="inline-flex items-center gap-2 text-slate-500">
-                                        <Loader2 className="animate-spin" size={16} /> Loading...
-                                    </span>
-                                </td>
-                            </tr>
-                        ) : filteredUsers.length === 0 ? (
-                            <tr>
-                                <td className="px-4 py-6" colSpan={4}>No users found</td>
-                            </tr>
-                        ) : (
-                            filteredUsers.map((u) => {
-                                const id = (u.id || u._id) as string;
-                                return (
-                                    <tr key={id} className="border-t border-slate-100 dark:border-slate-800">
-                                        <td className="px-4 py-2">{u.name}</td>
-                                        <td className="px-4 py-2">{u.email}</td>
-                                        <td className="px-4 py-2 capitalize">{u.role}</td>
-                                        <td className="px-4 py-2">{u.status}</td>
-                                    </tr>
-                                )
-                            })
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Courses snapshot */}
-            <div className="rounded-lg border bg-white p-3 dark:border-slate-700 dark:bg-slate-900">
-                <div className="mb-2 flex items-center justify-between">
-                    <h3 className="text-base font-semibold">Recent Courses</h3>
-                    <span className="text-xs text-slate-500">{courses.length} total</span>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {(isLoading ? Array.from({ length: 3 }) : courses.slice(0, 6)).map((c: any, idx: number) => (
-                        <div key={c?._id ?? idx} className="rounded-md border p-3 dark:border-slate-700">
-                            {isLoading ? (
-                                <div className="h-16 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-                            ) : (
-                                <>
-                                    <div className="text-sm font-medium line-clamp-1">{c?.title}</div>
-                                    <div className="mt-1 text-xs text-slate-500">Status: {c?.status ?? "n/a"}</div>
-                                </>
-                            )}
+            {/* Summary Statistics Cards */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-slate-400">Total Courses</p>
+                            <p className="text-3xl font-bold">{stats.totalCourses}</p>
                         </div>
-                    ))}
+                        <BookOpen size={24} className="text-blue-500" />
+                    </div>
                 </div>
+
+                <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-slate-400">Published</p>
+                            <p className="text-3xl font-bold">{stats.publishedCourses}</p>
+                        </div>
+                        <CheckCircle2 size={24} className="text-emerald-500" />
+                    </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-slate-400">Total Modules</p>
+                            <p className="text-3xl font-bold">{stats.totalModules}</p>
+                        </div>
+                        <FileText size={24} className="text-purple-500" />
+                    </div>
+                </div>
+
+                <div className="rounded-lg border border-slate-700 bg-slate-800 p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-slate-400">Total Lectures</p>
+                            <p className="text-3xl font-bold">{stats.totalLectures}</p>
+                        </div>
+                        <Video size={24} className="text-orange-500" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Course Cards */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {isLoading ? (
+                    Array.from({ length: 3 }).map((_, idx) => (
+                        <div key={idx} className="rounded-lg border border-slate-700 bg-slate-800 p-6 animate-pulse">
+                            <div className="h-32 bg-slate-700 rounded mb-4"></div>
+                            <div className="space-y-3">
+                                <div className="h-4 bg-slate-700 rounded"></div>
+                                <div className="h-3 bg-slate-700 rounded"></div>
+                                <div className="h-3 bg-slate-700 rounded"></div>
+                                <div className="h-3 bg-slate-700 rounded"></div>
+                            </div>
+                        </div>
+                    ))
+                ) : filteredCourses.length === 0 ? (
+                    <div className="col-span-full text-center py-12">
+                        <p className="text-slate-400 text-lg">No courses found</p>
+                    </div>
+                ) : (
+                    filteredCourses.map((course) => (
+                        <div key={course._id} className="rounded-lg border border-slate-700 bg-slate-800 overflow-hidden">
+                            {/* Course Image/Thumbnail */}
+                            <div className="relative h-32 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                                <div className="absolute top-2 right-2">
+                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
+                                        <CheckCircle2 size={12} />
+                                        Published
+                                    </span>
+                                </div>
+                                <div className="w-full h-full">
+                                    <Image
+                                        src={course?.thumbnail || ""}
+                                        alt={course.title}
+                                        fill
+                                        className="object-cover w-full h-full"
+                                        sizes="(max-width: 768px) 100vw, 100vw"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Course Content */}
+                            <div className="p-6 space-y-4">
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-2">{course.title}</h3>
+                                    <p className="text-slate-400 text-sm mb-3">
+                                        {course.description || "Course description"}
+                                    </p>
+                                </div>
+
+                                {/* Course Details */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                                        <User size={14} />
+                                        <span>{course.instructor || "Instructor Name"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                                        <Clock size={14} />
+                                        <span>{course.duration || "0h 0m"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                                        <DollarSign size={14} />
+                                        <span>{course.price || 0}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-sm text-slate-400">
+                                        <BarChart3 size={14} />
+                                        <span>{modules.length} modules</span>
+                                    </div>
+                                </div>
+
+                                {/* Tags */}
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-medium">
+                                        {course.level || "beginner"}
+                                    </span>
+                                    <span className="px-3 py-1 rounded-full bg-slate-600 text-slate-300 text-xs font-medium">
+                                        {course.category || "Fullstack"}
+                                    </span>
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2 pt-2">
+                                    <Link href={`/dashboard/admin/courses/${course._id}`}>   <button className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm text-white hover:bg-slate-700 transition-colors cursor-pointer">
+                                        <ModuleIcon size={14} />
+                                        Create Modules
+                                    </button></Link>
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );

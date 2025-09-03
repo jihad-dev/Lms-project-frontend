@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import Navbar from "./components/Navbar";
 import { useGetAllCoursesQuery } from "@/src/Redux/features/course/courseApi";
 
@@ -69,6 +70,7 @@ export default function Home() {
   
 
       <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
+        <Link href='#'>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-10">
             Explore Popular Courses
@@ -143,6 +145,8 @@ export default function Home() {
             ))}
           </div>
         </div>
+        
+        </Link>
       </section>
 
       {/* Featured Instructors Section */}
