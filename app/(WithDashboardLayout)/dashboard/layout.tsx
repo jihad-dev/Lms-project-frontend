@@ -77,6 +77,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         roleItems = [
             { label: "Dashboard", href: "/dashboard/admin", icon: <Home size={16} /> },
             { label: "Courses", href: "/dashboard/admin/courses", icon: <PlusCircle size={16} /> },
+            { label: "Enrollment Request", href: "/dashboard/admin/enrollment-request", icon: <PlusCircle size={16} /> },
             { label: "Manage Students", href: "/dashboard/admin/manage-students", icon: <Calendar size={16} /> },
             { label: "Manage Users", href: "/dashboard/admin/users", icon: <Users size={16} /> },
        

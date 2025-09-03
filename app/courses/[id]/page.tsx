@@ -1,6 +1,7 @@
 'use client';
 
 import { useGetCourseByIdQuery } from "@/src/Redux/features/course/courseApi";
+import { useCreateEnrollmentRequestMutation } from "@/src/Redux/features/course/enrollmentApi";
 import { useParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import { toast } from "sonner";
@@ -10,6 +11,17 @@ export default function CourseDetails() {
   const courseId = params.id as string;
   
   const { data: course, isLoading, isError } = useGetCourseByIdQuery(courseId);
+  const [createEnrollmentRequest, { isLoading: isEnrolling }] = useCreateEnrollmentRequestMutation();
+
+  const handleEnroll = async () => {
+    try {
+      await createEnrollmentRequest({ courseId }).unwrap();
+      toast.success("Enrollment request sent to admin");
+    } catch (error: any) {
+      const message = error?.data?.message || error?.error || "Failed to send enrollment request";
+      toast.error(message);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -80,10 +92,11 @@ export default function CourseDetails() {
 
                 {/* Enrollment Button */}
                 <button 
-                  className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors"
-                  onClick={() => toast.success("Enrollment feature coming soon!")}
+                  className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={handleEnroll}
+                  disabled={isEnrolling}
                 >
-                  Enroll Now
+                  {isEnrolling ? 'Sending...' : 'Enroll Now'}
                 </button>
               </div>
 
@@ -123,11 +136,11 @@ export default function CourseDetails() {
       </section>
 
       {/* Course Content */}
-      <section className="py-16 bg-white">
+      {/* <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Course Content</h2>
           <div className="space-y-4">
-            {/* Static Course Modules */}
+           
             <div className="border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -177,7 +190,7 @@ export default function CourseDetails() {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Instructor Section */}
       <section className="py-16 bg-gray-50">

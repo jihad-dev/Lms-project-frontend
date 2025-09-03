@@ -26,8 +26,10 @@ import {
     useToggleModulePublishMutation,
     useReorderModulesMutation,
 } from "@/src/Redux/features/course/moduleApi";
+import { useGetLecturesByCourseIdQuery } from "@/src/Redux/features/course/lectureApi";
 import { IModule } from "@/src/types/module";
 import { useGetCourseByIdQuery } from "@/src/Redux/features/course/courseApi";
+import Link from "next/link";
 
 const CourseModuleLectureManagement = () => {
     const params = useParams();
@@ -45,6 +47,7 @@ const CourseModuleLectureManagement = () => {
     // API hooks
     const { data: course, isLoading: courseLoading } = useGetCourseByIdQuery(courseId);
     const { data: modules = [], isLoading: modulesLoading, refetch } = useGetModulesByCourseIdQuery(courseId);
+    const { data: allLectures = [] } = useGetLecturesByCourseIdQuery(courseId);
     const [createModule, { isLoading: creating }] = useCreateModuleMutation();
     const [updateModule, { isLoading: updating }] = useUpdateModuleMutation();
     const [deleteModule, { isLoading: deleting }] = useDeleteModuleMutation();
@@ -355,11 +358,10 @@ const CourseModuleLectureManagement = () => {
                                             <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-700 text-white">
                                                 Module {module.moduleNumber}
                                             </span>
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                                                module.isPublished 
-                                                    ? 'bg-green-600 text-white' 
-                                                    : 'bg-orange-500 text-white'
-                                            }`}>
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${module.isPublished
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-orange-500 text-white'
+                                                }`}>
                                                 {module.isPublished ? 'Published' : 'Draft'}
                                             </span>
                                         </div>
@@ -380,25 +382,28 @@ const CourseModuleLectureManagement = () => {
                                         <div className="flex items-center gap-6 text-gray-400 text-sm">
                                             <div className="flex items-center gap-2">
                                                 <Play size={16} />
-                                                <span>0 lectures</span>
+                                                <span>{allLectures.filter(l => l.moduleId === module._id).length} lectures</span>
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Clock size={16} />
-                                                <span>0 min</span>
+                                                <span>{allLectures.filter(l => l.moduleId === module._id).reduce((total, l) => total + (l.duration || 0), 0)} min</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
                                     <div className="flex flex-col gap-3 ml-6">
-                                        <button
-                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-                                            title="Create Lectures"
-                                        >
-                                            <FileText size={16} />
-                                            Create Lectures
-                                        </button>
-                                        
+                                        <Link href={`/dashboard/admin/courses/${courseId}/modules/${module._id}/lectures`}>
+                                            <button
+                                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                                                title="Create Lectures"
+                                            >
+                                                <FileText size={16} />
+                                                Create Lectures
+                                            </button>
+
+                                        </Link>
+
                                         <button
                                             onClick={() => startEditing(module)}
                                             className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
@@ -407,7 +412,7 @@ const CourseModuleLectureManagement = () => {
                                             <Edit size={16} />
                                             Edit
                                         </button>
-                                        
+
                                         <button
                                             onClick={() => handleDeleteModule(module._id!)}
                                             disabled={deleting}
@@ -435,7 +440,7 @@ const CourseModuleLectureManagement = () => {
                             <li>• Drag and drop modules to reorder them</li>
                             <li>• Unpublished modules are only visible to instructors</li>
                             <li>• Module numbers are automatically assigned but can be customized</li>
-                            <li>• Each module can contain multiple lectures (coming soon)</li>
+                            <li>• Each module can contain multiple lectures - click "Create Lectures" to manage them</li>
                         </ul>
                     </div>
                 </div>

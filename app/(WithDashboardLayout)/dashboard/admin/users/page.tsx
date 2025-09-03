@@ -54,11 +54,7 @@ const Users = () => {
     const openEdit = async (record: UserRecord) => {
         const id = (record.id || record._id) as string | undefined;
         const currentStatus = record.status ?? "in-progress";
-        
-        console.log('Opening edit for record:', record);
-        console.log('Record ID:', id);
-        console.log('Current status:', currentStatus);
-        
+       
         setEditingId(id || null);
         setOriginalStatus(currentStatus);
         setFormValues({
@@ -105,8 +101,7 @@ const Users = () => {
             return;
         }
         
-        console.log('Form submitted with values:', formValues);
-        console.log('Editing ID:', editingId);
+     
         
         try {
             if (editingId) {
@@ -117,23 +112,20 @@ const Users = () => {
                     isDeleted: formValues.isDeleted,
                 };
                 
-                console.log('Updating user with data:', { id: editingId, data: updateData });
-                
+             
                 const updateResult = await updateUser({
                     id: editingId, 
                     data: updateData
                 }).unwrap();
-                
-                console.log('Update API response:', updateResult);
+         
                 
                 if (originalStatus !== null && originalStatus !== formValues.status) {
-                    console.log('Status changed, calling status API:', { id: editingId, status: formValues.status });
-                    const statusResult = await changeUserStatus({ id: editingId, status: formValues.status }).unwrap();
-                    console.log('Status API response:', statusResult);
+                    await changeUserStatus({ id: editingId, status: formValues.status }).unwrap();
+                    
                 }
                 toast.success("User updated");
             } else {
-                const res = await createUser({
+               await createUser({
                     email: formValues.email,
                     name: formValues.name,
                     role: formValues.role,
@@ -141,7 +133,7 @@ const Users = () => {
                     status: formValues.status,
                     isDeleted: formValues.isDeleted,
                 }).unwrap();
-                console.log(res, 'resssss')
+          
                 toast.success("User created");
             }
             closeModal();

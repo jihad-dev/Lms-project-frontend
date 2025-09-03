@@ -3,10 +3,11 @@
 import Link from "next/link";
 import Navbar from "./components/Navbar";
 import { useGetAllCoursesQuery } from "@/src/Redux/features/course/courseApi";
+import Footer from "./components/Footer";
 
 export default function Home() {
   const { data: courses, isLoading, isError } = useGetAllCoursesQuery(undefined);
-  console.log(courses)
+
 
 
 
@@ -67,10 +68,9 @@ export default function Home() {
         </div>
       </section>
       {/* Course Section */}
-  
+
 
       <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
-        <Link href='#'>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-10">
             Explore Popular Courses
@@ -86,16 +86,17 @@ export default function Home() {
               <div className="col-span-full text-center text-lg text-gray-500">No courses found.</div>
             )}
             {!isLoading && Array.isArray(courses) && courses.map((course) => (
-              <div
+              <Link
                 key={course._id}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex flex-col overflow-hidden"
+                href={`/courses/${course._id}`}
+                className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex flex-col overflow-hidden group"
               >
                 <div className="h-48 w-full bg-blue-100 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={course.thumbnail || "https://placehold.co/600x300?text=No+Image"}
                     alt={course.title}
-                    className="object-cover w-full h-full"
+                    className="object-cover w-full h-full group-hover:scale-105 transition-transform"
                   />
                 </div>
                 <div className="p-6 flex flex-col flex-1">
@@ -107,8 +108,8 @@ export default function Home() {
                       ? course.description
                       : "No description available."}
                   </p>
-                  
-                  {/* Instructor Info - Static Data */}
+
+                  {/* Instructor Info */}
                   <div className="flex items-center mb-4">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                       <span className="text-blue-600 font-semibold text-sm">
@@ -124,29 +125,29 @@ export default function Home() {
                       </p>
                     </div>
                   </div>
-                  
-                  {/* Course Stats - Static Data */}
+
+                  {/* Course Stats */}
                   <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
-                    <span>⭐ 4.8 (120 reviews)</span>
-                    <span>📚 {course.lessons || 12} lessons</span>
-                    <span>⏱️ {course.duration || "2h 30m"}</span>
+                    <span>⭐ {course.rating ? course.rating.toFixed(1) : "4.8"} ({course.reviewsCount || 120} reviews)</span>
+                    <span>📚 {course.lessonsCount || course.lessons || 12} lessons</span>
+                    <span>⏱️ {course.duration ? `${course.duration} min` : "2h 30m"}</span>
                   </div>
-                  
+
                   <div className="flex items-center justify-between mt-auto">
                     <span className="text-lg font-bold text-blue-600">
-                      {course.price !== undefined ? `$${course.price}` : "Free"}
+                      {course.price !== undefined && course.price !== null && course.price !== 0
+                        ? `$${course.price}`
+                        : "Free"}
                     </span>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition">
-                      Enroll
-                    </button>
+                    <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium group-hover:bg-blue-700 transition">
+                      View Details
+                    </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
-        
-        </Link>
       </section>
 
       {/* Featured Instructors Section */}
@@ -620,51 +621,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">L</span>
-                </div>
-                <span className="text-xl font-bold">LMS Pro</span>
-              </div>
-              <p className="text-gray-400">
-                Empowering education through innovative technology solutions.
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Support</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 LMS Pro. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
     </div>
   );

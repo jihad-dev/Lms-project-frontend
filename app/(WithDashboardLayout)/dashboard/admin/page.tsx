@@ -5,6 +5,7 @@ import { Search, BookOpen, CheckCircle2, FileText, Video, Filter, Plus, Edit, Fi
 import { useGetAllUserQuery } from "@/src/Redux/features/auth/authApi";
 import { useGetAllCoursesQuery } from "@/src/Redux/features/course/courseApi";
 import { useGetAllModulesQuery } from "@/src/Redux/features/course/moduleApi";
+import { useGetAllLecturesQuery } from "@/src/Redux/features/course/lectureApi";
 import { IModule } from "@/src/types/module";
 import Link from "next/link";
 import Image from "next/image";
@@ -23,6 +24,7 @@ type Course = {
     _id: string;
     title: string;
     status?: string;
+    isPublished?: boolean;
     price?: number;
     instructor?: string;
     duration?: string;
@@ -37,6 +39,11 @@ const AdminPage = () => {
     const { data: coursesData, isLoading: loadingCourses, isFetching: fetchingCourses } = useGetAllCoursesQuery();
     const { data: modulesData, isLoading: loadingModules, isFetching: fetchingModules } = useGetAllModulesQuery();
 
+
+
+    // Get all lectures to calculate total counts
+    const { data: allLectures = [], isLoading: loadingLectures } = useGetAllLecturesQuery();
+
     const users: User[] = Array.isArray(usersData) ? usersData : [];
     const courses: Course[] = Array.isArray(coursesData) ? coursesData : [];
     const modules: IModule[] = Array.isArray(modulesData) ? modulesData : [];
@@ -46,15 +53,24 @@ const AdminPage = () => {
     const [level, setLevel] = React.useState<string>("all");
     const [status, setStatus] = React.useState<string>("all");
 
-    const isLoading = loadingUsers || loadingCourses || fetchingUsers || fetchingCourses;
+    const isLoading = loadingUsers || loadingCourses || loadingLectures || fetchingUsers || fetchingCourses;
 
     const stats = React.useMemo(() => {
         const totalCourses = courses.length;
-        const publishedCourses = courses.filter(c => c.status === "published").length;
-        const totalModules = modules.length; // Mock data as shown in image
-        const totalLectures = 0; // Mock data as shown in image
-        return { totalCourses, publishedCourses, totalModules, totalLectures };
-    }, [courses, modules]);
+    
+        
+        // Check both status and published fields for backward compatibility
+        const publishedCourses = courses.filter(c => {
+          
+            return c.isPublished || c.status === "published";
+        }).length;
+        
+        const totalModules = modules.length;
+        const totalLectures = allLectures.length;
+        const publishedLectures = allLectures.filter(l => l.isPublished).length;
+        
+        return { totalCourses, publishedCourses, totalModules, totalLectures, publishedLectures };
+    }, [courses, modules, allLectures]);
 
     const filteredCourses = React.useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -62,7 +78,11 @@ const AdminPage = () => {
             const matchesQuery = !q || c.title.toLowerCase().includes(q);
             const matchesCategory = category === "all" || c.category === category;
             const matchesLevel = level === "all" || c.level === level;
-            const matchesStatus = status === "all" || c.status === status;
+            // Check both status and published fields for backward compatibility
+            const matchesStatus = status === "all" ||
+                c.status === status ||
+                (status === "published" && c.isPublished === true) ||
+                (status === "draft" && c.isPublished === false);
             return matchesQuery && matchesCategory && matchesLevel && matchesStatus;
         });
     }, [courses, query, category, level, status]);
@@ -159,7 +179,12 @@ const AdminPage = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-slate-400">Published</p>
-                            <p className="text-3xl font-bold">{stats.publishedCourses}</p>
+                            <p className="text-3xl font-bold">
+
+                                {
+                                    courses?.filter(c => c.isPublished === true || c.status === "published").length ?? 0
+                                }
+                            </p>
                         </div>
                         <CheckCircle2 size={24} className="text-emerald-500" />
                     </div>
@@ -179,7 +204,17 @@ const AdminPage = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-slate-400">Total Lectures</p>
-                            <p className="text-3xl font-bold">{stats.totalLectures}</p>
+                            {loadingLectures ? (
+                                <div className="animate-pulse">
+                                    <div className="h-8 bg-slate-700 rounded w-16 mb-1"></div>
+                                    <div className="h-3 bg-slate-700 rounded w-20"></div>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-3xl font-bold">{stats.totalLectures}</p>
+                                    <p className="text-xs text-slate-500">{stats.publishedLectures} published</p>
+                                </>
+                            )}
                         </div>
                         <Video size={24} className="text-orange-500" />
                     </div>
@@ -210,10 +245,17 @@ const AdminPage = () => {
                             {/* Course Image/Thumbnail */}
                             <div className="relative h-32 bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
                                 <div className="absolute top-2 right-2">
-                                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
-                                        <CheckCircle2 size={12} />
-                                        Published
-                                    </span>
+                                    {(course.status === "published" || course.isPublished === true) ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium">
+                                            <CheckCircle2 size={12} />
+                                            Published
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-xs font-medium">
+                                            <FileText size={12} />
+                                            Draft
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="w-full h-full">
                                     <Image
@@ -251,7 +293,7 @@ const AdminPage = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-slate-400">
                                         <BarChart3 size={14} />
-                                        <span>{modules.length} modules</span>
+                                        <span>{modules.filter(m => m.courseId === course._id).length} modules</span>
                                     </div>
                                 </div>
 

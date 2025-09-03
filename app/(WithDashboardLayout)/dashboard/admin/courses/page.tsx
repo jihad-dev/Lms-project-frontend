@@ -12,17 +12,17 @@ const Course = () => {
     const [updateCourse, { isLoading: updating }] = useUpdateCourseMutation();
     const [deleteCourse, { isLoading: deleting }] = useDeleteCourseMutation();
 
-    const [formState, setFormState] = useState<{ 
-        id?: string; 
-        title: string; 
+    const [formState, setFormState] = useState<{
+        id?: string;
+        title: string;
         instructor: string;
-        description: string; 
-        price: string; 
+        description: string;
+        price: string;
         duration: string;
         category: string;
         difficultyLevel: string;
-        publishStatus: boolean;
-        thumbnail?: File | null 
+        published: boolean;
+        thumbnail?: File | null
     }>({
         title: "",
         instructor: "",
@@ -31,7 +31,7 @@ const Course = () => {
         duration: "0",
         category: "",
         difficultyLevel: "Beginner",
-        publishStatus: false,
+        published: false,
         thumbnail: null,
     });
 
@@ -39,33 +39,58 @@ const Course = () => {
 
     const onSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        const fd = new FormData();
-        fd.append("title", formState.title);
-        if (formState.instructor) fd.append("instructor", formState.instructor);
-        if (formState.description) fd.append("description", formState.description);
-        if (formState.price) fd.append("price", String(Number(formState.price)));
-        if (formState.duration) fd.append("duration", String(Number(formState.duration)));
-        if (formState.category) fd.append("category", formState.category);
-        if (formState.difficultyLevel) fd.append("difficultyLevel", formState.difficultyLevel);
-        fd.append("publishStatus", String(formState.publishStatus));
-        if (formState.thumbnail) fd.append("thumbnail", formState.thumbnail);
+        
+        // Create course data object
+        const courseData = {
+            title: formState.title,
+            instructor: formState.instructor || undefined,
+            description: formState.description,
+            price: Number(formState.price),
+            duration: Number(formState.duration),
+            category: formState.category || undefined,
+            difficultyLevel: formState.difficultyLevel,
+            status: formState.published ? "published" : "draft", // Convert boolean to string status
+        };
+        
+        // If there's a thumbnail, use FormData, otherwise use JSON
+        let fd: FormData | null = null;
+        if (formState.thumbnail) {
+            fd = new FormData();
+            Object.entries(courseData).forEach(([key, value]) => {
+                if (value !== undefined && value !== null) {
+                    fd!.append(key, value as any);
+                }
+            });
+            fd.append("thumbnail", formState.thumbnail);
+          
+        }
+        
         try {
+         
             if (isEditing && formState.id) {
-                await updateCourse({ id: formState.id, data: fd }).unwrap();
+                const updateData = formState.thumbnail ? fd! : courseData;
+                await updateCourse({ id: formState.id, data: updateData }).unwrap();
             } else {
-                const res = await createCourse(fd).unwrap();
-                console.log(res, 'ressssss')
+                if (formState.thumbnail && fd) {
+                   
+                    const res = await createCourse(fd).unwrap();
+                
+                } else {
+                    
+                    const res = await createCourse(courseData).unwrap();
+                 
+                }
             }
-            setFormState({ 
-                title: "", 
+            setFormState({
+                title: "",
                 instructor: "",
-                description: "", 
-                price: "0", 
+                description: "",
+                price: "0",
                 duration: "0",
                 category: "",
                 difficultyLevel: "Beginner",
-                publishStatus: false,
-                thumbnail: null 
+                published: false,
+                thumbnail: null
             });
             refetch();
         } catch (err: any) {
@@ -83,7 +108,7 @@ const Course = () => {
             duration: String(c?.duration ?? "0"),
             category: c?.category || "",
             difficultyLevel: c?.difficultyLevel || "Beginner",
-            publishStatus: c?.publishStatus || false,
+            published: c?.published || false,
             thumbnail: null,
         });
     };
@@ -91,31 +116,31 @@ const Course = () => {
     const remove = async (id: string) => {
         try {
             await deleteCourse({ id }).unwrap();
-            if (formState.id === id) setFormState({ 
-                title: "", 
+            if (formState.id === id) setFormState({
+                title: "",
                 instructor: "",
-                description: "", 
-                price: "0", 
+                description: "",
+                price: "0",
                 duration: "0",
                 category: "",
                 difficultyLevel: "Beginner",
-                publishStatus: false,
-                thumbnail: null 
+                published: false,
+                thumbnail: null
             });
         } catch { }
     };
 
     const resetForm = () => {
-        setFormState({ 
-            title: "", 
+        setFormState({
+            title: "",
             instructor: "",
-            description: "", 
-            price: "0", 
+            description: "",
+            price: "0",
             duration: "0",
             category: "",
             difficultyLevel: "Beginner",
-            publishStatus: false,
-            thumbnail: null 
+            published: false,
+            thumbnail: null
         });
     };
 
@@ -257,19 +282,17 @@ const Course = () => {
                                     <div className="flex items-center gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setFormState((s) => ({ ...s, publishStatus: !s.publishStatus }))}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                                formState.publishStatus ? 'bg-indigo-600' : 'bg-gray-600'
-                                            }`}
+                                            onClick={() => setFormState((s) => ({ ...s, published: !s.published }))}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formState.published ? 'bg-indigo-600' : 'bg-gray-600'
+                                                }`}
                                         >
                                             <span
-                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                                    formState.publishStatus ? 'translate-x-6' : 'translate-x-1'
-                                                }`}
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formState.published ? 'translate-x-6' : 'translate-x-1'
+                                                    }`}
                                             />
                                         </button>
                                         <span className="text-gray-300">
-                                            {formState.publishStatus ? 'Published' : 'Draft'}
+                                            {formState.published ? 'Published' : 'Draft'}
                                         </span>
                                     </div>
                                 </div>
@@ -357,26 +380,26 @@ const Course = () => {
                 {/* Courses Grid */}
                 <div className="space-y-6">
                     <h3 className="text-xl font-semibold text-white">Existing Courses</h3>
-                    
+
                     {isLoading && (
                         <div className="text-center py-12">
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
                             <p className="text-gray-400 mt-4">Loading courses...</p>
                         </div>
                     )}
-                    
+
                     {isError && (
                         <div className="text-center py-12">
                             <p className="text-red-400">Failed to load courses.</p>
                         </div>
                     )}
-                    
+
                     {!isLoading && Array.isArray(courses) && courses.length === 0 && (
                         <div className="text-center py-12">
                             <p className="text-gray-400">No courses found. Create your first course above!</p>
                         </div>
                     )}
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {!isLoading && Array.isArray(courses) && courses.map((c: any) => (
                             <div
@@ -385,15 +408,15 @@ const Course = () => {
                             >
                                 {c?.thumbnail && (
                                     <div className="relative h-48 overflow-hidden">
-                                        <img 
-                                            src={c.thumbnail} 
-                                            alt={c?.title} 
+                                        <img
+                                            src={c.thumbnail}
+                                            alt={c?.title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                     </div>
                                 )}
-                                
+
                                 <div className="p-5 space-y-4">
                                     <div className="space-y-2">
                                         <div className="flex items-start justify-between gap-2">
@@ -406,19 +429,19 @@ const Course = () => {
                                                 </span>
                                             )}
                                         </div>
-                                        
+
                                         {c?.instructor && (
                                             <p className="text-sm text-gray-400">
                                                 by {c.instructor}
                                             </p>
                                         )}
-                                        
+
                                         {c?.description && (
                                             <p className="text-sm text-gray-300 line-clamp-2">
                                                 {c.description}
                                             </p>
                                         )}
-                                        
+
                                         <div className="flex items-center gap-2 text-xs text-gray-400">
                                             {c?.category && (
                                                 <span className="px-2 py-1 bg-gray-700 rounded-full">
@@ -432,7 +455,7 @@ const Course = () => {
                                             )}
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-2 pt-2">
                                         <button
                                             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-indigo-500 transition-colors"
@@ -441,7 +464,7 @@ const Course = () => {
                                             <Edit2 className="w-4 h-4" />
                                             Edit
                                         </button>
-                                        
+
                                         <button
                                             className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors"
                                             onClick={(e) => { e.stopPropagation(); router.push(`/dashboard/admin/courses/${c?._id || c?.id}`); }}
@@ -449,7 +472,7 @@ const Course = () => {
                                             <Eye className="w-4 h-4" />
                                             View
                                         </button>
-                                        
+
                                         <button
                                             className="px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-colors disabled:bg-gray-600"
                                             disabled={deleting}

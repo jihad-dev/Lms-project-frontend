@@ -13,46 +13,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("jihad@gamil.com");
   const [password, setPassword] = useState("123456");
 
-  // const handleSubmit = async (e: FormEvent) => {
-  //   e.preventDefault();
-  //   try {
-  //     const res = await login({ email, password }).unwrap();
-  //     console.log(res.message)
-
-  //     if (res.data.accessToken) {
-  //       dispatch(setUser({ user: res?.data?.user, token: res?.data?.accessToken }));
-  //       toast.success(res.message);
-  //       // role অনুযায়ী redirect
-  //       console.log(res?.data?.user);
-  //       const userWithRole = res?.data?.user as { role?: string }; // type assertion to fix TS error
-  //       if (userWithRole?.role === "admin") {
-  //         router.push("/dashboard/admin");
-  //       } else if (userWithRole?.role === "student") {
-  //         router.push("/dashboard/student");
-  //       } else if (userWithRole?.role === "super-admin") {
-  //         router.push("/dashboard/super-admin");
-  //       }
-
-  //     } else {
-  //       console.log(res,'res')
-  //       toast.error(res);
-  //     }
-
-
-  //   } catch (err: any) {
-  //     toast.error(err.message)
-  //   }
-  // };
-
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
       const res = await login({ email, password }).unwrap();
-      console.log("API Response:", res);
-     
+    
       if (res?.success && res?.data?.accessToken) {
-        // Redux store এ user+token সেট করা
+    
         dispatch(
           setUser({
             user: res.data.user,

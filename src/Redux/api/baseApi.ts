@@ -71,6 +71,6 @@ import {
   export const baseApi = createApi({
     reducerPath: "baseApi",
     baseQuery: baseQueryWithRefreshToken,
-    tagTypes: ["admins", "users", "courses", "modules"],
+    tagTypes: ["admins", "users", "courses", "modules", "lectures", "enrollments"],
     endpoints: () => ({}),
   });

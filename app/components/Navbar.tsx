@@ -22,9 +22,10 @@ export default function Navbar() {
             <Link href="/" className="text-xl font-bold text-gray-900 cursor-pointer">LMS Pro</Link>
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-700 hover:text-blue-600 transition-colors">Features</a>
-            <a href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">About</a>
-            <a href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">Contact</a>
+            <Link href="#features" className="text-gray-700 hover:text-blue-600 transition-colors">Features</Link>
+            <Link href="/all-course" className="text-gray-700 hover:text-blue-600 transition-colors">All Course</Link>
+            <Link href="/about" className="text-gray-700 hover:text-blue-600 transition-colors">About</Link>
+            <Link href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">Contact</Link>
           </div>
           <div className="flex items-center space-x-4 relative">
             {!user ? (
