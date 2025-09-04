@@ -110,11 +110,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         const startIndex = parts.indexOf("dashboard");
         const relevant = startIndex >= 0 ? parts.slice(startIndex) : parts;
         const acc: { label: string; href: string }[] = [];
+        const isDynamicId = (seg: string) => /^(?:[a-f0-9]{24})$/i.test(seg) || /^\d+$/.test(seg);
+        const pretty = (seg: string) => seg
+            .replace(/-/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase());
+
         relevant.forEach((part, index) => {
-            const href = "/" + relevant.slice(0, index + 1).join("/");
-            const label = part
-                .replace(/-/g, " ")
-                .replace(/\b\w/g, (c) => c.toUpperCase());
+            if (isDynamicId(part)) return; // skip ids in breadcrumbs
+            const href = "/" + relevant.slice(0, index + 1).filter((p) => !isDynamicId(p)).join("/");
+            const label = pretty(part);
             acc.push({ label, href });
         });
         return acc;

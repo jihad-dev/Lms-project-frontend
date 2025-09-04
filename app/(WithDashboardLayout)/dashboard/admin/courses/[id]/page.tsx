@@ -1,21 +1,18 @@
 "use client";
-
-import React, { useState, useCallback } from "react";
+import Swal from 'sweetalert2';
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import {
     Plus,
     Edit,
     Trash2,
-    Eye,
-    EyeOff,
-    GripVertical,
-    BookOpen,
-    Save,
     X,
     AlertCircle,
     Play,
     Clock,
-    FileText
+    FileText,
+    Save,
+    BookOpen
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -51,7 +48,6 @@ const CourseModuleLectureManagement = () => {
     const [createModule, { isLoading: creating }] = useCreateModuleMutation();
     const [updateModule, { isLoading: updating }] = useUpdateModuleMutation();
     const [deleteModule, { isLoading: deleting }] = useDeleteModuleMutation();
-    const [togglePublish, { isLoading: toggling }] = useToggleModulePublishMutation();
     const [reorderModules, { isLoading: reordering }] = useReorderModulesMutation();
 
     // Handle form input changes
@@ -122,36 +118,35 @@ const CourseModuleLectureManagement = () => {
         }
     };
 
-    // Delete module
+    // Delete module with SweetAlert2 confirmation
+
+
     const handleDeleteModule = async (moduleId: string) => {
-        if (!confirm("Are you sure you want to delete this module? This action cannot be undone.")) {
-            return;
-        }
+        const result = await Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        });
 
-        try {
-            await deleteModule({ id: moduleId, courseId }).unwrap();
-            toast.success("Module deleted successfully!");
-            refetch();
-        } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to delete module");
-        }
-    };
-
-    // Toggle module publish status
-    const handleTogglePublish = async (module: IModule) => {
-        try {
-            await togglePublish({
-                id: module._id!,
-                courseId,
-                isPublished: !module.isPublished,
-            }).unwrap();
-
-            toast.success(`Module ${!module.isPublished ? 'published' : 'unpublished'} successfully!`);
-            refetch();
-        } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to toggle module status");
+        if (result.isConfirmed) {
+            try {
+                await deleteModule({ id: moduleId, courseId }).unwrap();
+                await Swal.fire({
+                    title: "Deleted!",
+                    text: "Your file has been deleted.",
+                    icon: "success"
+                });
+                refetch();
+            } catch (error: any) {
+                toast.error(error?.data?.message || "Failed to delete module");
+            }
         }
     };
+
 
     // Start editing module
     const startEditing = (module: IModule) => {
@@ -215,7 +210,7 @@ const CourseModuleLectureManagement = () => {
         <div className="p-6 space-y-6 max-w-6xl mx-auto">
             {/* Header */}
             <div className="border-b pb-4">
-                <h1 className="text-3xl font-bold text-gray-900">Course Modules</h1>
+                <h1 className="text-3xl font-bold text-gray-900">Course Modulesttttt</h1>
                 <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                     <span className="font-medium">{course?.title}</span>
                     <span>•</span>
