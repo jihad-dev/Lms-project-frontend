@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Navbar from '../../../components/Navbar';
 import { useGetModulesByCourseIdQuery } from '@/src/Redux/features/course/moduleApi';
@@ -40,15 +40,40 @@ export default function CourseLearnPage() {
     return byModule;
   }, [lectures, search]);
 
+  // Map moduleId -> index based on modules list order
+  const moduleIndexMap = useMemo(() => {
+    const indexMap: Record<string, number> = {};
+    (modules ?? []).forEach((m: any, idx: number) => {
+      const id = m?._id as string | undefined;
+      if (id) indexMap[id] = idx;
+    });
+    return indexMap;
+  }, [modules]);
+
+  // Ensure serial order across modules then within each module
   const flatLectures = useMemo(() => {
-    return [...(lectures ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [lectures]);
+    return [...(lectures ?? [])].sort((a, b) => {
+      const am = moduleIndexMap[a.moduleId] ?? Number.MAX_SAFE_INTEGER;
+      const bm = moduleIndexMap[b.moduleId] ?? Number.MAX_SAFE_INTEGER;
+      if (am !== bm) return am - bm;
+      return (a.order ?? 0) - (b.order ?? 0);
+    });
+  }, [lectures, moduleIndexMap]);
 
   const currentLecture = flatLectures[currentIndex];
   const totalLectures = flatLectures.length;
   const progress = totalLectures ? Math.round(((currentIndex + 1) / totalLectures) * 100) : 0;
 
   const isLoading = modulesLoading || lecturesLoading;
+
+  // Keep the active lecture in view within the lessons list
+  useEffect(() => {
+    if (!currentLecture?._id) return;
+    const el = document.querySelector(`[data-lecture-id="${currentLecture._id}"]`);
+    if (el && 'scrollIntoView' in el) {
+      (el as HTMLElement).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }, [currentLecture?._id]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -57,7 +82,7 @@ export default function CourseLearnPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left: Content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 lg:sticky lg:top-24 self-start">
             {/* Progress */}
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -121,7 +146,7 @@ export default function CourseLearnPage() {
           </div>
 
           {/* Right: Modules & Lectures */}
-          <div className="space-y-4">
+          <div className="space-y-4 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto pr-1">
             <input
               type="text"
               placeholder="Search lessons..."
@@ -137,7 +162,7 @@ export default function CourseLearnPage() {
               {!isLoading && (modules ?? []).map((m, mIdx) => {
                 const moduleId = (m as any)._id as string;
                 const mLectures = grouped[moduleId] ?? [];
-                const isExpanded = expandedModuleId === moduleId || (expandedModuleId === null && mIdx === 0);
+                const isExpanded = expandedModuleId === moduleId;
                 return (
                   <div key={moduleId} className="bg-white rounded-xl border">
                     <button
@@ -162,6 +187,7 @@ export default function CourseLearnPage() {
                           return (
                             <button
                               key={lec._id}
+                              data-lecture-id={lec._id}
                               className={`w-full text-left px-4 py-3 flex items-center justify-between hover:bg-gray-50 ${active ? 'bg-blue-50' : ''}`}
                               disabled={locked}
                               onClick={() => setCurrentIndex(indexInFlat)}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import Navbar from "./components/Navbar";
 import { useGetAllCoursesQuery } from "@/src/Redux/features/course/courseApi";
 import Footer from "./components/Footer";
+import { ExpandableDescription } from "@/lib/ExpandableDescription";
 
 export default function Home() {
   const { data: courses, isLoading, isError } = useGetAllCoursesQuery(undefined);
@@ -86,9 +87,8 @@ export default function Home() {
               <div className="col-span-full text-center text-lg text-gray-500">No courses found.</div>
             )}
             {!isLoading && Array.isArray(courses) && courses.map((course) => (
-              <Link
+              <div
                 key={course._id}
-                href={`/courses/${course._id}`}
                 className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 flex flex-col overflow-hidden group"
               >
                 <div className="h-48 w-full bg-blue-100 flex items-center justify-center">
@@ -103,11 +103,15 @@ export default function Home() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">
                     {course.title}
                   </h3>
-                  <p className="text-gray-600 mb-4 flex-1">
-                    {course.description
-                      ? course.description
-                      : "No description available."}
-                  </p>
+                  {course.description && course.description.length > 120 ? (
+                    <ExpandableDescription description={course.description} />
+                  ) : (
+                    <p className="text-gray-600 mb-4 flex-1">
+                      {course.description
+                        ? course.description
+                        : "No description available."}
+                    </p>
+                  )}
 
                   {/* Instructor Info */}
                   <div className="flex items-center mb-4">
@@ -139,12 +143,14 @@ export default function Home() {
                         ? `$${course.price}`
                         : "Free"}
                     </span>
-                    <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium group-hover:bg-blue-700 transition">
-                      View Details
-                    </span>
+                    <Link href={`/courses/${course._id}`}>
+                      <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium group-hover:bg-blue-700 transition">
+                        View Details
+                      </span>
+                    </Link>
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>
