@@ -2,6 +2,8 @@
 
 import { useGetCourseByIdQuery } from "@/src/Redux/features/course/courseApi";
 import { useCreateEnrollmentRequestMutation } from "@/src/Redux/features/course/enrollmentApi";
+import { useGetModulesByCourseIdQuery } from "@/src/Redux/features/course/moduleApi";
+import { useGetLecturesByCourseIdQuery } from "@/src/Redux/features/course/lectureApi";
 import { useParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import { toast } from "sonner";
@@ -12,6 +14,8 @@ export default function CourseDetails() {
   
   const { data: course, isLoading, isError } = useGetCourseByIdQuery(courseId);
   const [createEnrollmentRequest, { isLoading: isEnrolling }] = useCreateEnrollmentRequestMutation();
+  const { data: modules, isLoading: modulesLoading } = useGetModulesByCourseIdQuery(courseId);
+  const { data: lectures, isLoading: lecturesLoading } = useGetLecturesByCourseIdQuery(courseId);
 
   const handleEnroll = async () => {
     try {
@@ -136,61 +140,52 @@ export default function CourseDetails() {
       </section>
 
       {/* Course Content */}
-      {/* <section className="py-16 bg-white">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Course Content</h2>
           <div className="space-y-4">
-           
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Module 1: Introduction</h3>
-                  <p className="text-sm text-gray-600">3 lessons • 45 min</p>
-                </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+            {modulesLoading || lecturesLoading ? (
+              <div className="text-gray-600">Loading course content...</div>
+            ) : !modules || modules.length === 0 ? (
+              <div className="text-gray-600">No modules found for this course.</div>
+            ) : (
+              (() => {
+                const lecturesByModule: Record<string, any[]> = {};
+                (lectures ?? []).forEach((lec: any) => {
+                  if (!lecturesByModule[lec.moduleId]) lecturesByModule[lec.moduleId] = [];
+                  lecturesByModule[lec.moduleId].push(lec);
+                });
 
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Module 2: Core Concepts</h3>
-                  <p className="text-sm text-gray-600">5 lessons • 1h 15min</p>
-                </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+                return modules.map((mod: any, idx: number) => {
+                  const modLectures = lecturesByModule[mod._id] || [];
+                  const totalMinutes = modLectures.reduce((sum, lec) => sum + (lec.duration || 0), 0);
+                  const hours = Math.floor(totalMinutes / 60);
+                  const minutes = totalMinutes % 60;
+                  const durationStr = hours > 0 ? `${hours}h${minutes > 0 ? ` ${minutes}m` : ""}` : `${minutes}m`;
 
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Module 3: Advanced Topics</h3>
-                  <p className="text-sm text-gray-600">4 lessons • 1h 30min</p>
-                </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold text-gray-900">Module 4: Final Project</h3>
-                  <p className="text-sm text-gray-600">2 lessons • 45 min</p>
-                </div>
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+                  return (
+                    <div className="border rounded-lg p-4" key={mod._id}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-gray-900">
+                            {mod.title || `Module ${idx + 1}`}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {modLectures.length} lesson{modLectures.length !== 1 ? "s" : ""} • {durationStr}
+                          </p>
+                        </div>
+                        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  );
+                });
+              })()
+            )}
           </div>
         </div>
-      </section> */}
+      </section>
 
       {/* Instructor Section */}
       <section className="py-16 bg-gray-50">
