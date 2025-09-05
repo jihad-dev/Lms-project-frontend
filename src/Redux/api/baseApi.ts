@@ -42,7 +42,7 @@ import {
       toast.error("Access denied. Please login again.");
       // Redirect to login or unauthorized page
       api.dispatch(logout());
-      // Use Next.js router instead of window.location
+    
       if (typeof window !== 'undefined') {
         window.location.href = '/unauthorized';
       }

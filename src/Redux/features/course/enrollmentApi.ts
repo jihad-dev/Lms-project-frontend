@@ -32,18 +32,21 @@ export const enrollmentApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
+      invalidatesTags: ['enrollments'],
     }),
     getAllEnrollmentRequests: builder.query<EnrollmentRequest[], void>({
       query: () => ({
         url: "/enrollment",
         method: "GET", 
       }),
+      providesTags: ['enrollments'],
     }),
     getMyEnrollmentRequests: builder.query<EnrollmentRequest[], void>({
       query: () => ({
         url: "/enrollment/my-requests",
         method: "GET",
       }),
+      providesTags: ['enrollments'],
     }),
     updateEnrollmentRequest: builder.mutation<EnrollmentRequest, UpdateEnrollmentRequestPayload>({
       query: ({ _id, status }) => ({

@@ -219,16 +219,16 @@ const Users = () => {
                 </button>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 ">
-                <table className="min-w-full text-xs md:text-sm">
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <table className="min-w-full text-xs md:text-sm table-fixed">
                     <thead className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-slate-900 dark:to-slate-800">
                         <tr className="text-left">
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base">Email</th>
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base hidden md:table-cell">Name</th>
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base">Role</th>
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base hidden sm:table-cell">Status</th>
-                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base hidden lg:table-cell">Deleted?</th>
-                            <th className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-200 text-base">Actions</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base w-1/3 sm:w-1/4">Email</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base hidden md:table-cell w-1/6">Name</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base w-1/6">Role</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base hidden sm:table-cell w-1/6">Status</th>
+                            <th className="px-4 py-3 font-semibold text-slate-700 dark:text-slate-200 text-base hidden lg:table-cell w-1/12">Deleted?</th>
+                            <th className="px-4 py-3 text-right font-semibold text-slate-700 dark:text-slate-200 text-base w-1/4 sm:w-1/6">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -245,7 +245,11 @@ const Users = () => {
                                 const id = (u.id || u._id) as string;
                                 return (
                                     <tr key={id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-blue-50/40 dark:hover:bg-slate-900/40 transition">
-                                        <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100 break-all">{u.email}</td>
+                                        <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">
+                                            <div className="max-w-[200px] sm:max-w-[250px] md:max-w-[300px] truncate" title={u.email}>
+                                                {u.email}
+                                            </div>
+                                        </td>
                                         <td className="px-4 py-3 text-slate-700 dark:text-slate-200 hidden md:table-cell">{u.name}</td>
                                         <td className="px-4 py-3 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold capitalize ${roleColor(u.role)}`}>
@@ -262,26 +266,28 @@ const Users = () => {
                                                 {u.isDeleted ? "Yes" : "No"}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-right space-x-2">
-                                            <button
-                                                className="inline-flex items-center gap-1 rounded-md border border-blue-500 px-2.5 py-1.5 text-blue-600 font-semibold bg-white hover:bg-blue-50 dark:bg-slate-900 dark:border-blue-700 dark:hover:bg-blue-900/20 transition"
-                                                onClick={() => openEdit(u)}
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z" />
-                                                </svg>
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="inline-flex items-center gap-1 rounded-md border border-red-500 px-2.5 py-1.5 text-red-600 font-semibold bg-white hover:bg-red-50 dark:bg-slate-900 dark:border-red-700 dark:hover:bg-red-900/20 transition disabled:opacity-50"
-                                                onClick={() => handleDelete(id)}
-                                                disabled={isDeleting}
-                                            >
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                                Delete
-                                            </button>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
+                                                <button
+                                                    className="inline-flex items-center gap-1 rounded-md border border-blue-500 px-2.5 py-1.5 text-blue-600 font-semibold bg-white hover:bg-blue-50 dark:bg-slate-900 dark:border-blue-700 dark:hover:bg-blue-900/20 transition text-xs sm:text-sm whitespace-nowrap"
+                                                    onClick={() => openEdit(u)}
+                                                >
+                                                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6-6 3 3-6 6H9v-3z" />
+                                                    </svg>
+                                                    <span className="hidden xs:inline">Edit</span>
+                                                </button>
+                                                <button
+                                                    className="inline-flex items-center gap-1 rounded-md border border-red-500 px-2.5 py-1.5 text-red-600 font-semibold bg-white hover:bg-red-50 dark:bg-slate-900 dark:border-red-700 dark:hover:bg-red-900/20 transition disabled:opacity-50 text-xs sm:text-sm whitespace-nowrap"
+                                                    onClick={() => handleDelete(id)}
+                                                    disabled={isDeleting}
+                                                >
+                                                    <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                    <span className="hidden xs:inline">Delete</span>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
@@ -413,6 +419,20 @@ const Users = () => {
                 }
                 .animate-fadeIn {
                     animation: fadeIn 0.25s cubic-bezier(.4,0,.2,1);
+                }
+                
+                /* Custom breakpoint for extra small screens */
+                @media (min-width: 475px) {
+                    .xs\:inline {
+                        display: inline;
+                    }
+                }
+                
+                /* Ensure table doesn't break on very small screens */
+                @media (max-width: 640px) {
+                    .table-responsive {
+                        font-size: 0.75rem;
+                    }
                 }
             `}</style>
         </div>

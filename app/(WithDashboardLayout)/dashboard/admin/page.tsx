@@ -42,7 +42,7 @@ const AdminPage = () => {
     const { data: usersData, isLoading: loadingUsers, isFetching: fetchingUsers } = useGetAllUserQuery();
     const { data: coursesData, isLoading: loadingCourses, isFetching: fetchingCourses } = useGetAllCoursesQuery();
     const { data: publishedCoursesData } = useGetPublishedCoursesQuery();
-    const { data: modulesData, isLoading: loadingModules, isFetching: fetchingModules } = useGetAllModulesQuery();
+    const { data: modulesData } = useGetAllModulesQuery();
 
 
 

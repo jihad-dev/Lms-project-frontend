@@ -7,10 +7,8 @@ import { usePathname } from "next/navigation";
 import React from "react";
 import {
     Users,
-    Stethoscope,
     Calendar,
     MessageSquare,
-    FileText,
     PlusCircle,
     UserCog,
     ShieldCheck,
@@ -24,6 +22,7 @@ import {
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/src/Redux/hook";
 import { logout } from "@/src/Redux/features/auth/authSlice";
+import { useLogoutMutation } from "@/src/Redux/features/auth/authApi";
 
 // Sidebar link type
 type NavItem = {
@@ -67,6 +66,7 @@ const SidebarLink = ({
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
     const pathname = usePathname();
     const dispatch = useAppDispatch();
+    const [logoutApi] = useLogoutMutation();
     const user = useAppSelector((state) => state.auth.user);
     const [mobileOpen, setMobileOpen] = React.useState(false);
 
@@ -144,7 +144,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                 <aside className="absolute inset-y-0 left-0 w-72 bg-white shadow-xl dark:bg-slate-800">
                     <div className="flex h-14 items-center justify-between border-b px-4 dark:border-slate-700">
                         <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
-                            <span className="text-blue-600">🎓</span> EduPro LMS
+                            <span className="text-blue-600">🎓</span>  LMS Pro
                         </Link>
                         <button
                             aria-label="Close menu"
@@ -171,7 +171,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
             <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-white dark:border-slate-700 dark:bg-slate-800 lg:block">
                 <div className="flex h-14 items-center border-b px-4 dark:border-slate-700">
                     <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
-                        <span className="text-blue-600">🎓</span> EduPro LMS
+                        <span className="text-blue-600">🎓</span>  LMS Pro
                     </Link>
                 </div>
                 <nav className="flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100%-56px)]">
@@ -253,12 +253,23 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
                                     <ul className="py-1">
                                         <li>
                                             <button
-                                                onClick={() => {
-                                                    // Logout logic
-                                                    if (typeof window !== "undefined") {
-
+                                                onClick={async () => {
+                                                    try {
+                                                        // Call logout API
+                                                        await logoutApi({}).unwrap();
+                                                        // Clear local state
                                                         dispatch(logout());
-                                                        window.location.href = "/login";
+                                                        // Redirect to login
+                                                        if (typeof window !== "undefined") {
+                                                            window.location.href = "/login";
+                                                        }
+                                                    } catch (error) {
+                                                        console.error("Logout failed:", error);
+                                                        // Even if API fails, clear local state and redirect
+                                                        dispatch(logout());
+                                                        if (typeof window !== "undefined") {
+                                                            window.location.href = "/login";
+                                                        }
                                                     }
                                                 }}
                                                 className="w-full cursor-pointer text-left px-4 py-2 text-red-600 hover:bg-red-50"

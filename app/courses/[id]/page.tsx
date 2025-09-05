@@ -7,10 +7,12 @@ import { useGetLecturesByCourseIdQuery } from "@/src/Redux/features/course/lectu
 import { useParams } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import { toast } from "sonner";
+import { useAppSelector } from "@/src/Redux/hook";
 
 export default function CourseDetails() {
   const params = useParams();
   const courseId = params.id as string;
+  const user = useAppSelector((state) => state.auth.user);
   
   const { data: course, isLoading, isError } = useGetCourseByIdQuery(courseId);
   const [createEnrollmentRequest, { isLoading: isEnrolling }] = useCreateEnrollmentRequestMutation();
@@ -96,8 +98,15 @@ export default function CourseDetails() {
 
                 {/* Enrollment Button */}
                 <button 
-                  className="w-full bg-blue-600 text-white py-4 px-6 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                  onClick={handleEnroll}
+                  className="w-full cursor-pointer bg-blue-600 text-white py-4 px-6 rounded-xl text-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    if (!user) {
+                      // If user is not logged in, redirect to login
+                      window.location.href = "/login";
+                    } else {
+                      handleEnroll();
+                    }
+                  }}
                   disabled={isEnrolling}
                 >
                   {isEnrolling ? 'Sending...' : 'Enroll Now'}
