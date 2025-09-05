@@ -1,3 +1,4 @@
+import { useLogoutMutation } from "@/src/Redux/features/auth/authApi";
 import { logout } from "@/src/Redux/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/src/Redux/hook";
 import Link from "next/link";
@@ -5,9 +6,11 @@ import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const user = useAppSelector((state) => state.auth.user);
+  const [logoutApi] = useLogoutMutation();
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logoutApi({}); // Delete refresh Token in cokiee 
     dispatch(logout());
     router.push("/login");
   }
@@ -77,16 +80,6 @@ export default function Navbar() {
                           className="block px-4 py-2 text-gray-700 hover:bg-blue-50"
                         >
                           Student Dashboard
-                        </Link>
-                      </li>
-                    )}
-                    {user?.role === "instructor" && (
-                      <li>
-                        <Link
-                          href="/dashboard/instructor"
-                          className="block px-4 cursor-pointer py-2 text-gray-700 hover:bg-blue-50"
-                        >
-                          Instructor Dashboard
                         </Link>
                       </li>
                     )}

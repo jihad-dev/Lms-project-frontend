@@ -49,7 +49,7 @@ export const authApi = baseApi.injectEndpoints({
         }),
         updateUser: builder.mutation<any, { id: string; data: Partial<{ email: string; name: string; role: string; status: string; isDeleted: boolean }> }>({
             query: ({ id, data }) => ({
-                url: `/users/${id}`,
+                url: `/users/update-user/${id}`,
                 method: 'PATCH',
                 body: data,
             }),
@@ -90,8 +90,15 @@ export const authApi = baseApi.injectEndpoints({
                 { type: 'users', id: 'LIST' },
             ],
         }),
-       
+        logout: builder.mutation({
+            query: () => ({
+                url: "/auth/logout",
+                method: "POST",
+                cache: "no-store",
+            }),
+        }),
+
     }),
 })
 
-export const { useLoginMutation, useGetSingleUserQuery, useRegisterMutation , useGetAllUserQuery, useCreateUserMutation, useUpdateUserMutation, useDeleteUserMutation, useChangeUserRoleMutation, useChangeUserStatusMutation } = authApi;
+export const { useLoginMutation, useGetSingleUserQuery, useRegisterMutation, useGetAllUserQuery, useCreateUserMutation, useUpdateUserMutation, useDeleteUserMutation, useChangeUserRoleMutation, useChangeUserStatusMutation, useLogoutMutation } = authApi;

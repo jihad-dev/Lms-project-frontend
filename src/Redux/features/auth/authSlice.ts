@@ -22,6 +22,10 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null
             state.token = null
+            // Clear refresh token cookie
+            if (typeof document !== 'undefined') {
+                document.cookie = 'refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+            }
         },
     },
 })

@@ -5,6 +5,7 @@ import { useAppDispatch } from "../../src/Redux/hook";
 import { setUser } from "../../src/Redux/features/auth/authSlice";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,15 +19,21 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const res = await login({ email, password }).unwrap();
-    
+
       if (res?.success && res?.data?.accessToken) {
-    
+
         dispatch(
           setUser({
             user: res.data.user,
             token: res.data.accessToken,
           })
         );
+        
+        // Set refresh token cookie manually if backend doesn't set it
+        if (res?.data?.refreshToken) {
+          document.cookie = `refreshToken=${res.data.refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+        }
+        
         toast.success(res.message || "Login successful!");
 
         // ✅ Success toast
@@ -85,6 +92,40 @@ export default function LoginPage() {
         >
           {isLoading ? "Signing in..." : "Sign in"}
         </button>
+
+        {/* Create Account Section */}
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: "1px solid #374151" }}>
+          <p style={{ color: "#9ca3af", textAlign: "center", marginBottom: 16, fontSize: 14 }}>
+            Don't have an account yet?
+          </p>
+          <Link 
+            href="/register"
+            style={{
+              display: "block",
+              width: "100%",
+              padding: "10px 12px",
+              borderRadius: 8,
+              background: "transparent",
+              color: "#60a5fa",
+              fontWeight: 600,
+              border: "1px solid #374151",
+              textAlign: "center",
+              textDecoration: "none",
+              transition: "all 0.2s ease",
+              cursor: "pointer"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#1f2937";
+              e.currentTarget.style.borderColor = "#60a5fa";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.borderColor = "#374151";
+            }}
+          >
+            Create Account
+          </Link>
+        </div>
       </form>
     </div>
   );
