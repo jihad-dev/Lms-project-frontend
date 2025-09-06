@@ -18,7 +18,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // 🚀 Build এ lint / type error ignore করবে
   eslint: {
     ignoreDuringBuilds: true,
   },
