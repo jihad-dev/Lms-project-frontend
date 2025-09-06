@@ -23,7 +23,7 @@ export const courseApi = baseApi.injectEndpoints({
                 const courses = Array.isArray(result) ? result : [];
                 return [
                     { type: 'courses', id: 'LIST' },
-                    ...courses.map((c: any) => ({ type: 'courses' as const, id: c?._id || c?.id })),
+                    ...courses.map((c: any) => ({ type: 'courses' as const, id: c._id })),
                 ];
             },
         }),

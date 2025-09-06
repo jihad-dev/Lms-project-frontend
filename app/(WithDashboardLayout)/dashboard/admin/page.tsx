@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import { Search, BookOpen, CheckCircle2, FileText, Video, Filter, Plus, Edit, FileText as ModuleIcon, Clock, User, DollarSign, BarChart3, Users, XCircle, Calendar } from "lucide-react";
+import { Search, BookOpen, CheckCircle2, FileText, Video, Filter, Plus, FileText as ModuleIcon, Clock, User, DollarSign, BarChart3, Users } from "lucide-react";
 import { useGetAllUserQuery } from "@/src/Redux/features/auth/authApi";
 import { useGetAllCoursesQuery, useGetPublishedCoursesQuery } from "@/src/Redux/features/course/courseApi";
 import { useGetAllModulesQuery } from "@/src/Redux/features/course/moduleApi";
 import { useGetAllLecturesQuery } from "@/src/Redux/features/course/lectureApi";
-import { useGetAllEnrollmentRequestsQuery, useUpdateEnrollmentRequestMutation } from "@/src/Redux/features/course/enrollmentApi";
+import { useGetAllEnrollmentRequestsQuery } from "@/src/Redux/features/course/enrollmentApi";
 import { IModule } from "@/src/types/module";
 import Link from "next/link";
 import Image from "next/image";
@@ -36,17 +36,6 @@ type Course = {
     thumbnail?: string;
 };
 
-type EnrollmentRequest = {
-    _id: string;
-    userId: string;
-    courseId: string;
-    status?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    user?: User;
-    course?: Course;
-};
-
 
 const AdminPage = () => {
     const { data: usersData, isLoading: loadingUsers, isFetching: fetchingUsers } = useGetAllUserQuery();
@@ -55,17 +44,12 @@ const AdminPage = () => {
     const { data: modulesData } = useGetAllModulesQuery();
     const { data: enrollmentRequestsData, isLoading: loadingEnrollmentRequests, isFetching: fetchingEnrollmentRequests } = useGetAllEnrollmentRequestsQuery();
     const enrollmentRequests = Array.isArray(enrollmentRequestsData) ? enrollmentRequestsData : []
-
-    // Get all lectures to calculate total counts
     const { data: allLectures = [], isLoading: loadingLectures } = useGetAllLecturesQuery();
-    
-    // Mutation for updating enrollment requests
-    const [updateEnrollmentRequest] = useUpdateEnrollmentRequestMutation();
 
     const users: User[] = Array.isArray(usersData) ? usersData : [];
     const courses: Course[] = Array.isArray(coursesData) ? coursesData : [];
     const modules: IModule[] = Array.isArray(modulesData) ? modulesData : [];
-   
+
     const [query, setQuery] = React.useState("");
     const [category, setCategory] = React.useState<string>("all");
     const [level, setLevel] = React.useState<string>("all");
@@ -84,7 +68,7 @@ const AdminPage = () => {
         const totalModules = modules.length;
         const totalLectures = allLectures.length;
         const publishedLectures = allLectures.filter(l => l.isPublished).length;
-        
+
         // Enrollment request stats
         const pendingRequests = enrollmentRequests.filter(req => req.status === "pending" || !req.status).length;
         const approvedRequests = enrollmentRequests.filter(req => req.status === "approved").length;
@@ -114,25 +98,6 @@ const AdminPage = () => {
         setStatus("all");
     };
 
-    // Handler functions for enrollment requests
-    const handleApproveRequest = async (requestId: string) => {
-        try {
-            await updateEnrollmentRequest({ _id: requestId, status: "approved" }).unwrap();
-        } catch (error) {
-            console.error("Failed to approve request:", error);
-        }
-    };
-
-    const handleRejectRequest = async (requestId: string) => {
-        try {
-            await updateEnrollmentRequest({ _id: requestId, status: "rejected" }).unwrap();
-        } catch (error) {
-            console.error("Failed to reject request:", error);
-        }
-    };
-
-    // Get pending requests for display
-    const pendingRequests = enrollmentRequests.filter(req => req.status === "pending" || !req.status);
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6 space-y-6">
@@ -222,7 +187,7 @@ const AdminPage = () => {
                             <p className="text-3xl font-bold">
 
                                 {(Array.isArray(publishedCoursesData) ? publishedCoursesData.length : undefined) ??
-                                 (courses?.filter(c => Boolean(c.published) || c.status === "published").length ?? 0)}
+                                    (courses?.filter(c => Boolean(c.published) || c.status === "published").length ?? 0)}
                             </p>
                         </div>
                         <CheckCircle2 size={24} className="text-emerald-500" />

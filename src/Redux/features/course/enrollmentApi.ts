@@ -27,20 +27,23 @@ export const enrollmentApi = baseApi.injectEndpoints({
     createEnrollmentRequest: builder.mutation<
       EnrollmentRequest,
       CreateEnrollmentRequestPayload>({
-      query: (body) => ({
-        url: "/enrollment",
-        method: "POST",
-        body,
+        query: (body) => ({
+          url: "/enrollment",
+          method: "POST",
+          body,
+        }),
+        invalidatesTags: [
+          { type: 'enrollments', id: 'LIST' },
+          { type: 'courses', id: 'LIST' }
+        ],
       }),
-      invalidatesTags: ['enrollments'],
-    }),
     getAllEnrollmentRequests: builder.query<EnrollmentRequest[], void>({
       query: () => ({
         url: "/enrollment",
-        method: "GET", 
+        method: "GET",
       }),
       transformResponse: (response: any) => response?.data ?? response,
-      providesTags: ['enrollments'],
+      providesTags: [{ type: 'enrollments', id: 'LIST' }],
     }),
     getMyEnrollmentRequests: builder.query<EnrollmentRequest[], void>({
       query: () => ({
@@ -48,7 +51,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
         method: "GET",
       }),
       transformResponse: (response: any) => response?.data ?? response,
-      providesTags: ['enrollments'],
+      providesTags: [{ type: 'enrollments', id: 'LIST' }],
     }),
     updateEnrollmentRequest: builder.mutation<EnrollmentRequest, UpdateEnrollmentRequestPayload>({
       query: ({ _id, status }) => ({
@@ -59,6 +62,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { _id }) => [
         { type: 'enrollments', id: _id },
         { type: 'enrollments', id: 'LIST' },
+        { type: 'courses', id: 'LIST' }
       ],
     }),
     deleteEnrollmentRequest: builder.mutation<EnrollmentRequest, DeleteEnrollmentRequestPayload>({
@@ -69,11 +73,12 @@ export const enrollmentApi = baseApi.injectEndpoints({
       invalidatesTags: (_result, _error, { _id }) => [
         { type: 'enrollments', id: _id },
         { type: 'enrollments', id: 'LIST' },
+        { type: 'courses', id: 'LIST' }
       ],
     }),
   }),
 });
 
-export const { useCreateEnrollmentRequestMutation,useGetAllEnrollmentRequestsQuery , useGetMyEnrollmentRequestsQuery, useUpdateEnrollmentRequestMutation, useDeleteEnrollmentRequestMutation} = enrollmentApi;
+export const { useCreateEnrollmentRequestMutation, useGetAllEnrollmentRequestsQuery, useGetMyEnrollmentRequestsQuery, useUpdateEnrollmentRequestMutation, useDeleteEnrollmentRequestMutation } = enrollmentApi;
 
 
