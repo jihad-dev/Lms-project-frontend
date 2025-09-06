@@ -11,17 +11,10 @@ type JwtPayload = {
 export function middleware(req: NextRequest) {
     const token = req.cookies.get("refreshToken")?.value;
     const pathname = req.nextUrl.pathname;
-    
-    console.log({ 
-        pathname, 
-        token: token ? 'Token exists' : 'No token',
-        url: req.url,
-        cookies: req.cookies.getAll().map(c => c.name)
-    }, '🔒 Middleware Debug')
 
     // No token - redirect to unauthorized
     if (!token) {
-        console.log('❌ No token found, redirecting to unauthorized');
+      
         return NextResponse.redirect(new URL("/unauthorized", req.url));
     }
 
