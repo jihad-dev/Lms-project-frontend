@@ -1,11 +1,12 @@
 "use client";
 
 import React from "react";
-import { Search, BookOpen, CheckCircle2, FileText, Video, Filter, Plus, Edit, FileText as ModuleIcon, Clock, User, DollarSign, BarChart3 } from "lucide-react";
+import { Search, BookOpen, CheckCircle2, FileText, Video, Filter, Plus, Edit, FileText as ModuleIcon, Clock, User, DollarSign, BarChart3, Users, XCircle, Calendar } from "lucide-react";
 import { useGetAllUserQuery } from "@/src/Redux/features/auth/authApi";
 import { useGetAllCoursesQuery, useGetPublishedCoursesQuery } from "@/src/Redux/features/course/courseApi";
 import { useGetAllModulesQuery } from "@/src/Redux/features/course/moduleApi";
 import { useGetAllLecturesQuery } from "@/src/Redux/features/course/lectureApi";
+import { useGetAllEnrollmentRequestsQuery, useUpdateEnrollmentRequestMutation } from "@/src/Redux/features/course/enrollmentApi";
 import { IModule } from "@/src/types/module";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,6 +36,17 @@ type Course = {
     thumbnail?: string;
 };
 
+type EnrollmentRequest = {
+    _id: string;
+    userId: string;
+    courseId: string;
+    status?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    user?: User;
+    course?: Course;
+};
+
 
 
 
@@ -43,26 +55,28 @@ const AdminPage = () => {
     const { data: coursesData, isLoading: loadingCourses, isFetching: fetchingCourses } = useGetAllCoursesQuery();
     const { data: publishedCoursesData } = useGetPublishedCoursesQuery();
     const { data: modulesData } = useGetAllModulesQuery();
-
-
+    const { data: enrollmentRequestsData, isLoading: loadingEnrollmentRequests, isFetching: fetchingEnrollmentRequests } = useGetAllEnrollmentRequestsQuery();
 
     // Get all lectures to calculate total counts
     const { data: allLectures = [], isLoading: loadingLectures } = useGetAllLecturesQuery();
+    
+    // Mutation for updating enrollment requests
+    const [updateEnrollmentRequest] = useUpdateEnrollmentRequestMutation();
 
     const users: User[] = Array.isArray(usersData) ? usersData : [];
     const courses: Course[] = Array.isArray(coursesData) ? coursesData : [];
     const modules: IModule[] = Array.isArray(modulesData) ? modulesData : [];
+    const enrollmentRequests: EnrollmentRequest[] = Array.isArray(enrollmentRequestsData) ? enrollmentRequestsData : []; 
 
     const [query, setQuery] = React.useState("");
     const [category, setCategory] = React.useState<string>("all");
     const [level, setLevel] = React.useState<string>("all");
     const [status, setStatus] = React.useState<string>("all");
 
-    const isLoading = loadingUsers || loadingCourses || loadingLectures || fetchingUsers || fetchingCourses;
+    const isLoading = loadingUsers || loadingCourses || loadingLectures || loadingEnrollmentRequests || fetchingUsers || fetchingCourses || fetchingEnrollmentRequests;
 
     const stats = React.useMemo(() => {
         const totalCourses = courses.length;
-
 
         // Check status and published fields for backward compatibility
         const publishedCourses = courses.filter(c => {
@@ -72,9 +86,14 @@ const AdminPage = () => {
         const totalModules = modules.length;
         const totalLectures = allLectures.length;
         const publishedLectures = allLectures.filter(l => l.isPublished).length;
+        console.log(enrollmentRequests,'dsfsfsdf')
+        // Enrollment request stats
+        const pendingRequests = enrollmentRequests.filter(req => req.status === "pending" || !req.status).length;
+        const approvedRequests = enrollmentRequests.filter(req => req.status === "approved").length;
+        const rejectedRequests = enrollmentRequests.filter(req => req.status === "rejected").length;
 
-        return { totalCourses, publishedCourses, totalModules, totalLectures, publishedLectures };
-    }, [courses, modules, allLectures]);
+        return { totalCourses, publishedCourses, totalModules, totalLectures, publishedLectures, pendingRequests, approvedRequests, rejectedRequests };
+    }, [courses, modules, allLectures, enrollmentRequests]);
 
     const filteredCourses = React.useMemo(() => {
         const q = query.trim().toLowerCase();
@@ -97,6 +116,26 @@ const AdminPage = () => {
         setLevel("all");
         setStatus("all");
     };
+
+    // Handler functions for enrollment requests
+    const handleApproveRequest = async (requestId: string) => {
+        try {
+            await updateEnrollmentRequest({ _id: requestId, status: "approved" }).unwrap();
+        } catch (error) {
+            console.error("Failed to approve request:", error);
+        }
+    };
+
+    const handleRejectRequest = async (requestId: string) => {
+        try {
+            await updateEnrollmentRequest({ _id: requestId, status: "rejected" }).unwrap();
+        } catch (error) {
+            console.error("Failed to reject request:", error);
+        }
+    };
+
+    // Get pending requests for display
+    const pendingRequests = enrollmentRequests.filter(req => req.status === "pending");
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6 space-y-6">
@@ -168,7 +207,7 @@ const AdminPage = () => {
             </div>
 
             {/* Summary Statistics Cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <div className="rounded-lg border bg-card p-6">
                     <div className="flex items-center justify-between">
                         <div>
@@ -222,7 +261,101 @@ const AdminPage = () => {
                         <Video size={24} className="text-orange-500" />
                     </div>
                 </div>
+
+                <div className="rounded-lg border bg-card p-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-muted-foreground">Pending Requests</p>
+                            {loadingEnrollmentRequests ? (
+                                <div className="animate-pulse">
+                                    <div className="h-8 bg-muted rounded w-16 mb-1"></div>
+                                    <div className="h-3 bg-muted rounded w-20"></div>
+                                </div>
+                            ) : (
+                                <>
+                                    <p className="text-3xl font-bold">{stats.pendingRequests}</p>
+                                    <p className="text-xs text-muted-foreground">{stats.approvedRequests} approved</p>
+                                </>
+                            )}
+                        </div>
+                        <Users size={24} className="text-amber-500" />
+                    </div>
+                </div>
             </div>
+
+            {/* Pending Requests Section */}
+            {pendingRequests.length > 0 && (
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold">Pending Enrollment Requests</h2>
+                        <Link href="/dashboard/admin/enrollment-request">
+                            <button className="inline-flex items-center gap-2 rounded-lg border border-input bg-background px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors">
+                                View All Requests
+                            </button>
+                        </Link>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {pendingRequests.slice(0, 6).map((request) => {
+                            const course = request.course || courses.find(c => c._id === request.courseId);
+                            const user = request.user || users.find(u => u._id === request.userId);
+                            const createdAt = request.createdAt ? new Date(request.createdAt) : null;
+                            
+                            return (
+                                <div key={request._id} className="rounded-lg border bg-card p-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted">
+                                            {course?.thumbnail ? (
+                                                <Image
+                                                    src={course.thumbnail}
+                                                    alt={course.title || "Course"}
+                                                    fill
+                                                    className="object-cover"
+                                                    sizes="48px"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center">
+                                                    <BookOpen size={20} className="text-muted-foreground" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-medium truncate">{course?.title || "Unknown Course"}</h3>
+                                            <p className="text-sm text-muted-foreground truncate">
+                                                Requested by {user?.name || user?.email || "Unknown User"}
+                                            </p>
+                                            {createdAt && (
+                                                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                                    <Calendar size={12} />
+                                                    {createdAt.toLocaleDateString()}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-2 mt-4">
+                                        <button
+                                            onClick={() => handleApproveRequest(request._id)}
+                                            className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-emerald-500 px-3 py-2 text-sm text-white hover:bg-emerald-600 transition-colors"
+                                        >
+                                            <CheckCircle2 size={14} />
+                                            Approve
+                                        </button>
+                                        <button
+                                            onClick={() => handleRejectRequest(request._id)}
+                                            className="flex-1 inline-flex items-center justify-center gap-1 rounded-lg bg-red-500 px-3 py-2 text-sm text-white hover:bg-red-600 transition-colors"
+                                        >
+                                            <XCircle size={14} />
+                                            Reject
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {/* Course Cards */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
@@ -292,7 +425,33 @@ const AdminPage = () => {
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <Clock size={14} />
-                                        <span>{course.duration || "0h 0m"}</span>
+                                        <span>
+                                            {(() => {
+                                                // Parse duration as minutes or "Xh Ym"
+                                                const d = course.duration;
+                                                if (!d) return "0h 0m";
+                                                if (typeof d === "number") {
+                                                    const hours = Math.floor(d / 60);
+                                                    const mins = d % 60;
+                                                    return `${hours}h ${mins}m`;
+                                                }
+                                                // If string, try to parse "Xh Ym" or "Z" (minutes)
+                                                const match = /^(\d+)\s*h\s*(\d+)?\s*m?$/i.exec(d);
+                                                if (match) {
+                                                    const h = match[1] || "0";
+                                                    const m = match[2] || "0";
+                                                    return `${h}h ${m}m`;
+                                                }
+                                                // If only minutes as string
+                                                const mins = parseInt(d, 10);
+                                                if (!isNaN(mins)) {
+                                                    const hours = Math.floor(mins / 60);
+                                                    const rem = mins % 60;
+                                                    return `${hours}h ${rem}m`;
+                                                }
+                                                return d;
+                                            })()}
+                                        </span>
                                     </div>
                                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                         <DollarSign size={14} />

@@ -1,5 +1,6 @@
 "use client";
-
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
 import React, { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -13,11 +14,9 @@ import {
     AlertCircle,
     Play,
     Clock,
-    FileText,
     ArrowLeft,
-    GripVertical,
-    Video,
-    BookOpen
+    BookOpen,
+    Video
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -95,7 +94,7 @@ const LectureManagement = () => {
             toast.error("Title is required");
             return;
         }
-        
+
         if (!formData.pdfNotes || formData.pdfNotes.length === 0) {
             toast.error("At least one PDF note is required");
             return;
@@ -130,7 +129,7 @@ const LectureManagement = () => {
             toast.error("Title is required");
             return;
         }
-        
+
         if (!formData.pdfNotes || formData.pdfNotes.length === 0) {
             toast.error("At least one PDF note is required");
             return;
@@ -154,8 +153,23 @@ const LectureManagement = () => {
     };
 
     // Delete lecture
+
+    const MySwal = withReactContent(Swal);
+
     const handleDeleteLecture = async (lectureId: string) => {
-        if (!confirm("Are you sure you want to delete this lecture? This action cannot be undone.")) {
+        const result = await MySwal.fire({
+            title: "Are you sure?",
+            text: "Are you sure you want to delete this lecture? This action cannot be undone.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, delete it!",
+            cancelButtonText: "Cancel",
+            reverseButtons: true,
+        });
+
+        if (!result.isConfirmed) {
             return;
         }
 

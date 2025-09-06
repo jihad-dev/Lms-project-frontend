@@ -10,6 +10,21 @@ export default function Home() {
   const { data: courses, isLoading, isError } = useGetAllCoursesQuery(undefined);
 
 
+  // Helper function to format duration
+  const formatDuration = (totalMinutes: number) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (hours === 0) {
+      return `${minutes}min`;
+    } else if (minutes === 0) {
+      return `${hours}hr`;
+    } else {
+      return `${hours}hr ${minutes}min`;
+    }
+  };
+
+
 
 
   return (
@@ -134,7 +149,7 @@ export default function Home() {
                   <div className="flex items-center justify-between mb-4 text-sm text-gray-500">
                     <span>⭐ {course.rating ? course.rating.toFixed(1) : "4.8"} ({course.reviewsCount || 120} reviews)</span>
                     <span>📚 {course.lessonsCount || course.lessons || 12} lessons</span>
-                    <span>⏱️ {course.duration ? `${course.duration} min` : "2h 30m"}</span>
+                    <span>⏱️ {course.duration ? formatDuration(course.duration) : "2hr 30min"}</span>
                   </div>
 
                   <div className="flex items-center justify-between mt-auto">

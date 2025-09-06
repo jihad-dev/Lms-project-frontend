@@ -88,7 +88,29 @@ export default function CourseDetails() {
                 <div className="flex items-center space-x-6 text-sm text-gray-500 mb-6">
                   <span>⭐ 4.8 (120 reviews)</span>
                   <span>📚 {course.lessons || 12} lessons</span>
-                  <span>⏱️ {course.duration || "2h 30m"}</span>
+                  <span>
+                    ⏱️ {
+                      (() => {
+                        // Convert duration (in minutes or string) to "Xh Ym" format
+                        const d = course.duration;
+                        if (!d) return "0h 0m";
+                        if (typeof d === "number") {
+                          const h = Math.floor(d / 60);
+                          const m = d % 60;
+                          return `${h}h ${m}m`;
+                        }
+                        // If string like "150", try to parse as minutes
+                        const num = parseInt(d, 10);
+                        if (!isNaN(num)) {
+                          const h = Math.floor(num / 60);
+                          const m = num % 60;
+                          return `${h}h ${m}m`;
+                        }
+                        // If already in "2h 30m" or similar, just show as is
+                        return d;
+                      })()
+                    }
+                  </span>
                 </div>
 
                 {/* Price */}
