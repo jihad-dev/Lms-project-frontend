@@ -39,6 +39,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
         url: "/enrollment",
         method: "GET", 
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       providesTags: ['enrollments'],
     }),
     getMyEnrollmentRequests: builder.query<EnrollmentRequest[], void>({
@@ -46,6 +47,7 @@ export const enrollmentApi = baseApi.injectEndpoints({
         url: "/enrollment/my-requests",
         method: "GET",
       }),
+      transformResponse: (response: any) => response?.data ?? response,
       providesTags: ['enrollments'],
     }),
     updateEnrollmentRequest: builder.mutation<EnrollmentRequest, UpdateEnrollmentRequestPayload>({

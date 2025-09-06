@@ -48,14 +48,13 @@ type EnrollmentRequest = {
 };
 
 
-
-
 const AdminPage = () => {
     const { data: usersData, isLoading: loadingUsers, isFetching: fetchingUsers } = useGetAllUserQuery();
     const { data: coursesData, isLoading: loadingCourses, isFetching: fetchingCourses } = useGetAllCoursesQuery();
     const { data: publishedCoursesData } = useGetPublishedCoursesQuery();
     const { data: modulesData } = useGetAllModulesQuery();
     const { data: enrollmentRequestsData, isLoading: loadingEnrollmentRequests, isFetching: fetchingEnrollmentRequests } = useGetAllEnrollmentRequestsQuery();
+    const enrollmentRequests = Array.isArray(enrollmentRequestsData) ? enrollmentRequestsData : []
 
     // Get all lectures to calculate total counts
     const { data: allLectures = [], isLoading: loadingLectures } = useGetAllLecturesQuery();
@@ -66,8 +65,7 @@ const AdminPage = () => {
     const users: User[] = Array.isArray(usersData) ? usersData : [];
     const courses: Course[] = Array.isArray(coursesData) ? coursesData : [];
     const modules: IModule[] = Array.isArray(modulesData) ? modulesData : [];
-    const enrollmentRequests: EnrollmentRequest[] = Array.isArray(enrollmentRequestsData) ? enrollmentRequestsData : []; 
-
+   
     const [query, setQuery] = React.useState("");
     const [category, setCategory] = React.useState<string>("all");
     const [level, setLevel] = React.useState<string>("all");
@@ -86,13 +84,12 @@ const AdminPage = () => {
         const totalModules = modules.length;
         const totalLectures = allLectures.length;
         const publishedLectures = allLectures.filter(l => l.isPublished).length;
-        console.log(enrollmentRequests,'dsfsfsdf')
+        
         // Enrollment request stats
         const pendingRequests = enrollmentRequests.filter(req => req.status === "pending" || !req.status).length;
         const approvedRequests = enrollmentRequests.filter(req => req.status === "approved").length;
-        const rejectedRequests = enrollmentRequests.filter(req => req.status === "rejected").length;
 
-        return { totalCourses, publishedCourses, totalModules, totalLectures, publishedLectures, pendingRequests, approvedRequests, rejectedRequests };
+        return { totalCourses, publishedCourses, totalModules, totalLectures, publishedLectures, pendingRequests, approvedRequests };
     }, [courses, modules, allLectures, enrollmentRequests]);
 
     const filteredCourses = React.useMemo(() => {
@@ -135,7 +132,7 @@ const AdminPage = () => {
     };
 
     // Get pending requests for display
-    const pendingRequests = enrollmentRequests.filter(req => req.status === "pending");
+    const pendingRequests = enrollmentRequests.filter(req => req.status === "pending" || !req.status);
 
     return (
         <div className="min-h-screen bg-background text-foreground p-6 space-y-6">
@@ -284,7 +281,7 @@ const AdminPage = () => {
             </div>
 
             {/* Pending Requests Section */}
-            {pendingRequests.length > 0 && (
+            {/* {pendingRequests.length > 0 && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold">Pending Enrollment Requests</h2>
@@ -355,7 +352,7 @@ const AdminPage = () => {
                         })}
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* Course Cards */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
